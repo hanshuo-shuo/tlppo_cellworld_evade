@@ -55,17 +55,18 @@ def make_env(cfg):
 	"""
 	Make Myosuite environment.
 	"""
-	# env = gymnasium.make("CellworldBotEvade-v0",
-    #          world_name="21_05",
-    #          use_lppos=False,
-    #          use_predator=True,
-    #          max_step=300,
-    #          time_step=0.25,
-    #          render=False,
-    #          real_time=False,
-    #          reward_function=cwg.Reward({"puffed": -1, "finished": 1}))
-	# env = GymnasiumToGymWrapper(env)
-	env = Environment()
+	env = gymnasium.make("CellworldBotEvade-v0",
+             world_name="21_05",
+             use_lppos=False,
+             use_predator=True,
+             max_step=300,
+             time_step=0.25,
+             render=False,
+             real_time=False,
+             reward_function=cwg.Reward({"puffed": -1, "finished": 1}),
+			 action_type=cwg.BotEvadeEnv.ActionType.CONTINUOUS)
+	env = GymnasiumToGymWrapper(env)
+	# env = Environment()
 	env = MypreyWrapper(env, cfg)
 	env = TimeLimit(env, max_episode_steps=1000)
 	env.max_episode_steps = env._max_episode_steps
@@ -83,14 +84,14 @@ def make_prey_env(cfg):
 
 	cfg.action_dim = int(env.action_space.shape[0])
 	# show the type of action space
-	if isinstance(env.action_space, gym.spaces.Discrete):
+	if isinstance(env.action_space, (gym.spaces.Discrete, gymnasium.spaces.Discrete)):
 		print('discrete')
-	elif isinstance(env.action_space, gym.spaces.Box):
+	elif isinstance(env.action_space, (gym.spaces.Box, gymnasium.spaces.Box)):
 		print('box')
 	else:
 		raise ValueError('Unknown action space type')
 	print(type(cfg.action_dim))
-	cfg.episode_length = env.max_step
+	cfg.episode_length = 100 #env.max_step
 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
 	return env
 
