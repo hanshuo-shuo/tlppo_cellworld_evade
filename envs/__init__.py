@@ -2,39 +2,35 @@ from copy import deepcopy
 import warnings
 import numpy as np
 import gym
+import gymnasium
 from envs.wrappers.time_limit import TimeLimit
 from envs.wrappers.tensor import TensorWrapper
 from envs.exceptions import UnknownTaskError
+import cellworld_gym as cwg
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 from envs.prey_env.gym_env_bins import Environment
 
 
-# def make_env(cfg):
-# 	"""
-# 	Make an environment for TD-MPC2 experiments.
-# 	"""
-# 	gym.logger.set_level(40)
-# 	if cfg.multitask:
-# 		env = make_multitask_env(cfg)
-# 	else:
-# 		env = None
-# 		for fn in [make_dm_control_env, make_maniskill_env, make_metaworld_env, make_myosuite_env]:
-# 			try:
-# 				env = fn(cfg)
-# 			except UnknownTaskError:
-# 				pass
-# 		if env is None:
-# 			raise UnknownTaskError(cfg.task)
-# 		env = TensorWrapper(env)
-# 	try: # Dict
-# 		cfg.obs_shape = {k: v.shape for k, v in env.observation_space.spaces.items()}
-# 	except: # Box
-# 		cfg.obs_shape = {'state': env.observation_space.shape}
-# 	cfg.action_dim = env.action_space.shape[0]
-# 	cfg.episode_length = env.max_episode_steps
-# 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
-# 	return env
+class GymnasiumToGymWrapper(gym.Env):
+    def __init__(self, env):
+        self.env = env
+        self.action_space = env.action_space
+        self.observation_space = env.observation_space
+
+    def reset(self):
+        obs, info = self.env.reset()
+        return obs
+
+    def step(self, action):
+        obs, reward, done, truncated, info = self.env.step(action)
+        return obs, reward, done or truncated, info
+
+    def render(self, mode='human'):
+        return self.env.render()
+
+    def close(self):
+        self.env.close()
 
 class MypreyWrapper(gym.Wrapper):
 	def __init__(self, env, cfg):
@@ -59,6 +55,16 @@ def make_env(cfg):
 	"""
 	Make Myosuite environment.
 	"""
+	# env = gymnasium.make("CellworldBotEvade-v0",
+    #          world_name="21_05",
+    #          use_lppos=False,
+    #          use_predator=True,
+    #          max_step=300,
+    #          time_step=0.25,
+    #          render=False,
+    #          real_time=False,
+    #          reward_function=cwg.Reward({"puffed": -1, "finished": 1}))
+	# env = GymnasiumToGymWrapper(env)
 	env = Environment()
 	env = MypreyWrapper(env, cfg)
 	env = TimeLimit(env, max_episode_steps=1000)
@@ -74,7 +80,32 @@ def make_prey_env(cfg):
 		cfg.obs_shape = {k: v.shape for k, v in env.observation_space.spaces.items()}
 	except: # Box
 		cfg.obs_shape = {'state': env.observation_space.shape}
-	cfg.action_dim = env.action_space.shape[0]
+
+	cfg.action_dim = int(env.action_space.shape[0])
+	# show the type of action space
+	if isinstance(env.action_space, gym.spaces.Discrete):
+		print('discrete')
+	elif isinstance(env.action_space, gym.spaces.Box):
+		print('box')
+	else:
+		raise ValueError('Unknown action space type')
+	print(type(cfg.action_dim))
 	cfg.episode_length = env.max_step
 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
 	return env
+
+if __name__ == '__main__':
+	env = gymnasium.make("CellworldBotEvade-v0",
+						 world_name="21_05",
+						 use_lppos=False,
+						 use_predator=True,
+						 max_step=300,
+						 time_step=0.25,
+						 render=False,
+						 real_time=False,
+						 reward_function=cwg.Reward({"puffed": -1, "finished": 1}))
+	env = GymnasiumToGymWrapper(env)
+	env.reset()
+	env.step(env.action_space.sample())
+	print(env.observation_space.shape)
+	print(env.action_space.n)

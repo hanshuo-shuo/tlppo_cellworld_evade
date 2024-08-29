@@ -65,3 +65,7 @@ dependencies:
     # - myosuite # MyoSuite requires gym==0.13.0 which conflicts with Meta-World & ManiSkill2, install separately if needed
     - tensordict-nightly
     - torchrl-nightly
+      
+      cellworld-game            0.0.60                   pypi_0    pypi
+      cellworld-gym             0.0.70                   pypi_0    pypi
+
