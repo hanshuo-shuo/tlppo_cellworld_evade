@@ -26,14 +26,18 @@ class OnlineTrainer(Trainer):
 
 	def eval(self):
 		"""Evaluate a TD-MPC2 agent."""
-		ep_rewards, ep_successes = [], []
+		ep_rewards, ep_successes, ep_survivals = [], [], []
 		for i in range(self.cfg.eval_episodes):
 			obs, done, ep_reward, t = self.env.reset(), False, 0, 0
+			survived = True
 			if self.cfg.save_video:
-				self.logger.video.init(self.env, enabled=(i==0))
+				self.logger.video.init(self.env, enabled=(i == 0))
 			while not done:
-				action = self.agent.act(obs, t0=t==0, eval_mode=True)
+				action = self.agent.act(obs, t0=t == 0, eval_mode=True)
 				obs, reward, done, info = self.env.step(action)
+				# any negative reward means the agent died
+				if reward < 0:
+					survived = False
 				# self.env.render()
 				ep_reward += reward
 				t += 1
@@ -41,11 +45,13 @@ class OnlineTrainer(Trainer):
 					self.logger.video.record(self.env)
 			ep_rewards.append(ep_reward)
 			ep_successes.append(info['success'])
+			ep_survivals.append(survived)
 			if self.cfg.save_video:
 				self.logger.video.save(self._step)
 		return dict(
 			episode_reward=np.nanmean(ep_rewards),
 			episode_success=np.nanmean(ep_successes),
+			survival_rate=np.nanmean(ep_survivals)
 		)
 
 	def to_td(self, obs, action=None, reward=None):
@@ -69,7 +75,6 @@ class OnlineTrainer(Trainer):
 		"""Train a TD-MPC2 agent."""
 		train_metrics, done, eval_next = {}, True, True
 		while self._step <= self.cfg.steps:
-
 
 			# Evaluate agent periodically
 			if self._step % self.cfg.eval_freq == 0:
