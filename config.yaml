@@ -6,7 +6,7 @@ task: prey_env
 
 # evaluation
 checkpoint: ???
-eval_episodes: 50
+eval_episodes: 5
 eval_freq: 10000
 
 # training
@@ -78,7 +78,7 @@ multitask: ???
 tasks: ???
 obs_shape: ???
 action_dim: ???
-episode_length: ???
+episode_length: 100
 obs_shapes: ???
 action_dims: ???
 episode_lengths: ???
