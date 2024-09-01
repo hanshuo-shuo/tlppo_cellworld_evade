@@ -51,7 +51,7 @@ class MypreyWrapper(gym.Wrapper):
 		return self.env.render()
 
 
-def make_env(cfg):
+def make_env(cfg, max_episode_steps=50):
 	"""
 	Make Myosuite environment.
 	"""
@@ -68,14 +68,14 @@ def make_env(cfg):
 	env = GymnasiumToGymWrapper(env)
 	# env = Environment()
 	env = MypreyWrapper(env, cfg)
-	env = TimeLimit(env, max_episode_steps=1000)
+	env = TimeLimit(env, max_episode_steps=max_episode_steps)
 	env.max_episode_steps = env._max_episode_steps
 	return env
 
 
 def make_prey_env(cfg):
 	gym.logger.set_level(40)
-	env = make_env(cfg)
+	env = make_env(cfg, max_episode_steps=cfg.episode_length)
 	env = TensorWrapper(env)
 	try: # Dict
 		cfg.obs_shape = {k: v.shape for k, v in env.observation_space.spaces.items()}
