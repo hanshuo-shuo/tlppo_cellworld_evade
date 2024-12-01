@@ -2,15 +2,15 @@ defaults:
     - override hydra/launcher: basic
 
 # environment
-task: prey_env
+task: cautious_train
 
 # evaluation
 checkpoint: ???
-eval_episodes: 5
-eval_freq: 10000
+eval_episodes: 10
+eval_freq: 4000
 
-# training
-steps: 40_0000
+
+steps: 4_0000
 batch_size: 256
 reward_coef: 0.1
 value_coef: 0.1
@@ -38,6 +38,7 @@ min_std: 0.05
 max_std: 2
 temperature: 0.5
 
+
 # actor
 log_std_min: -10
 log_std_max: 2
@@ -49,7 +50,7 @@ vmin: -10
 vmax: +10
 
 # architecture
-model_size: 5
+model_size: 3
 num_enc_layers: 2
 enc_dim: 256
 mlp_dim: 512
@@ -69,7 +70,7 @@ save_csv: true
 # misc
 save_video: false
 save_agent: true
-seed: 2
+seed: 100
 
 # convenience
 work_dir: ???
@@ -78,9 +79,8 @@ multitask: ???
 tasks: ???
 obs_shape: ???
 action_dim: ???
-episode_length: 100
+episode_length: 300
 obs_shapes: ???
 action_dims: ???
-episode_lengths: ???
-seed_steps: ???
+seed_steps: 5000
 bin_size: ???

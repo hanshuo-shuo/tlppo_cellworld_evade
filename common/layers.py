@@ -2,43 +2,64 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from functorch import combine_state_for_ensemble
-from  functools import  wraps
+from functools import wraps
+
 
 
 class Ensemble(nn.Module):
-	"""
-	Vectorized ensemble of modules.
-	"""
+    """
+    Vectorized ensemble of modules.
+    """
 
-	def __init__(self, modules, **kwargs):
-		super().__init__()
-		# modules = nn.ModuleList(modules)
-		self.original_modules = nn.ModuleList(modules)  # Store the original modules
-		fn, params, _ = combine_state_for_ensemble(self.original_modules)
-		# fn, params, _ = combine_state_for_ensemble(modules)
-		self.vmap = torch.vmap(fn, in_dims=(0, 0, None), randomness='different', **kwargs)
-		self.params = nn.ParameterList([nn.Parameter(p) for p in params])
-		self._repr = str(modules)
+    def __init__(self, modules, **kwargs):
+        super().__init__()
+        self.original_modules = nn.ModuleList(modules)
+        fn, params, buffers = combine_state_for_ensemble(modules)
+        self.vmap = torch.vmap(fn, in_dims=(0, 0, None), randomness='different')
+        self.params = nn.ParameterList([nn.Parameter(p) for p in params])
+        self._repr = str(modules)
 
-	# def modules(self):
-	# 	return self.vmap.__wrapped__.stateless_model
+    def forward(self, *args, **kwargs):
+        return self.vmap([p for p in self.params], (), *args, **kwargs)
 
-	def modules(self):
-		# Return the original modules directly
-		return self.original_modules
+    def __repr__(self):
+        return 'Vectorized ' + self._repr
 
-	# def set_drop_out(self, dropout):
-	# 	for m in self.original_modules.modules():
-	# 		if isinstance(m, nn.Dropout):
-	# 			m.p = dropout
-	# 	fn, params, _ = combine_state_for_ensemble(self.original_modules)
-	# 	self.vmap = torch.vmap(fn, in_dims=(0, 0, None), randomness='different', **self.kwargs)
 
-	def forward(self, *args, **kwargs):
-		return self.vmap([p for p in self.params], (), *args, **kwargs)
-
-	def __repr__(self):
-		return 'Vectorized ' + self._repr
+# class Ensemble(nn.Module):
+# 	"""
+# 	Vectorized ensemble of modules.
+# 	"""
+#
+# 	def __init__(self, modules, **kwargs):
+# 		super().__init__()
+# 		# modules = nn.ModuleList(modules)
+# 		self.original_modules = nn.ModuleList(modules)  # Store the original modules
+# 		fn, params, _ = combine_state_for_ensemble(self.original_modules)
+# 		# fn, params, _ = combine_state_for_ensemble(modules)
+# 		self.vmap = torch.vmap(fn, in_dims=(0, 0, None), randomness='different', **kwargs)
+# 		self.params = nn.ParameterList([nn.Parameter(p) for p in params])
+# 		self._repr = str(modules)
+#
+# 	# def modules(self):
+# 	# 	return self.vmap.__wrapped__.stateless_model
+#
+# 	def modules(self):
+# 		# Return the original modules directly
+# 		return self.original_modules
+#
+# 	# def set_drop_out(self, dropout):
+# 	# 	for m in self.original_modules.modules():
+# 	# 		if isinstance(m, nn.Dropout):
+# 	# 			m.p = dropout
+# 	# 	fn, params, _ = combine_state_for_ensemble(self.original_modules)
+# 	# 	self.vmap = torch.vmap(fn, in_dims=(0, 0, None), randomness='different', **self.kwargs)
+#
+# 	def forward(self, *args, **kwargs):
+# 		return self.vmap([p for p in self.params], (), *args, **kwargs)
+#
+# 	def __repr__(self):
+# 		return 'Vectorized ' + self._repr
 
 
 class SimNorm(nn.Module):

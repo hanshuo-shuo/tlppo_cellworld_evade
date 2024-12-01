@@ -109,6 +109,64 @@ class Buffer():
 			   reward.to(self._device, non_blocking=True), \
 			   task.to(self._device, non_blocking=True) if task is not None else None
 
+	# def sample(self):
+	# 	"""
+    #     Sample a batch of sub-trajectories from the buffer with balanced reward types:
+    #     - 30% negative reward experiences
+    #     - 30% positive reward experiences
+    #     - 40% neutral reward experiences
+    #     """
+	# 	batch_size = self.cfg.batch_size
+	#
+	# 	# Sample a larger pool to ensure we have enough of each type
+	# 	obs, action, reward, task = self._buffer.sample(batch_size=batch_size * 10)
+	#
+	# 	# Identify different reward types across the horizon
+	# 	is_negative = (reward < 0).any(dim=0)
+	# 	is_positive = (reward > 0).any(dim=0)
+	# 	is_neutral = (~is_negative) & (~is_positive)
+	#
+	# 	neg_indices = torch.where(is_negative)[0]
+	# 	pos_indices = torch.where(is_positive)[0]
+	# 	neutral_indices = torch.where(is_neutral)[0]
+	#
+	# 	# Calculate desired counts for each type
+	# 	neg_count = int(batch_size * 0.3)
+	# 	pos_count = int(batch_size * 0.2)
+	# 	neutral_count = batch_size - neg_count - pos_count
+	#
+	# 	# Helper function to sample indices with fallback
+	# 	def sample_indices(source_indices, desired_count, fallback_indices):
+	# 		if len(source_indices) >= desired_count:
+	# 			return source_indices[torch.randperm(len(source_indices))[:desired_count]]
+	# 		else:
+	# 			remaining = desired_count - len(source_indices)
+	# 			additional = fallback_indices[torch.randperm(len(fallback_indices))[:remaining]]
+	# 			return torch.cat([source_indices, additional])
+	#
+	# 	# Sample balanced indices
+	# 	selected_neg = sample_indices(neg_indices, neg_count, neutral_indices)
+	# 	selected_pos = sample_indices(pos_indices, pos_count, neutral_indices)
+	#
+	# 	# Remaining neutral samples
+	# 	remaining_neutral_count = batch_size - len(selected_neg) - len(selected_pos)
+	# 	selected_neutral = neutral_indices[torch.randperm(len(neutral_indices))[:remaining_neutral_count]]
+	#
+	# 	# Combine all selected indices
+	# 	selected_indices = torch.cat([selected_neg, selected_pos, selected_neutral])
+	# 	selected_indices = selected_indices[torch.randperm(len(selected_indices))]
+	#
+	# 	# Select the final batch
+	# 	obs = obs[:, selected_indices]
+	# 	action = action[:, selected_indices]
+	# 	reward = reward[:, selected_indices]
+	# 	task = task[selected_indices] if task is not None else None
+	#
+	# 	return obs.to(self._device, non_blocking=True), \
+	# 		action.to(self._device, non_blocking=True), \
+	# 		reward.to(self._device, non_blocking=True), \
+	# 		task.to(self._device, non_blocking=True) if task is not None else None
+
 	def save(self):
 		"""Save the buffer to disk. Useful for storing offline datasets."""
 		td = self._buffer._storage._storage.cpu()

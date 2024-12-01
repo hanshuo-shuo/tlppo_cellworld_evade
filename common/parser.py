@@ -4,7 +4,7 @@ from pathlib import Path
 import hydra
 from omegaconf import OmegaConf
 
-from common import MODEL_SIZE, TASK_SET
+from common import MODEL_SIZE
 
 
 def parse_cfg(cfg: OmegaConf) -> OmegaConf:
@@ -48,13 +48,14 @@ def parse_cfg(cfg: OmegaConf) -> OmegaConf:
 		cfg.latent_dim = 512 # This checkpoint is slightly smaller
 
 	# Multi-task
-	cfg.multitask = cfg.task in TASK_SET.keys()
-	if cfg.multitask:
-		cfg.task_title = cfg.task.upper()
-		# Account for slight inconsistency in task_dim for the mt30 experiments
-		cfg.task_dim = 96 if cfg.task == 'mt80' or cfg.model_size in {1, 317} else 64
-	else:
-		cfg.task_dim = 0
-	cfg.tasks = TASK_SET.get(cfg.task, [cfg.task])
+	# cfg.multitask = cfg.task in TASK_SET.keys()
+	# if cfg.multitask:
+	# 	cfg.task_title = cfg.task.upper()
+	# 	# Account for slight inconsistency in task_dim for the mt30 experiments
+	# 	cfg.task_dim = 96 if cfg.task == 'mt80' or cfg.model_size in {1, 317} else 64
+	# else:
+	# 	cfg.task_dim = 0
+	# cfg.tasks = TASK_SET.get(cfg.task, [cfg.task])
 
+	cfg.task_dim = 0
 	return cfg
